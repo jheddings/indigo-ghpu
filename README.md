@@ -4,7 +4,8 @@ This is an Indigo plugin updater for plugins released on GitHub.  To help illust
 usage, this project also happens to be a plugin, although not a very useful one.
 
 When creating releases for your plugins, you should use the `v{major}.{minor}.{revision}`
-format.  This will help ensure compatibility with Indigo's versioning scheme.
+format.  This will help ensure compatibility with Indigo's
+[plugin versioning scheme](http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:plugin_guide#the_infoplist_file).
 
 ## Installation
 
