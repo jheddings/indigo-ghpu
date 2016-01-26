@@ -30,8 +30,17 @@ class GitHubPluginUpdater(object):
 
     #---------------------------------------------------------------------------
     # returns the URL for an update if there is one
-    def checkForUpdate(self, currentVersion):
+    def checkForUpdate(self, currentVersion=None):
         self._log('Checking for updates...')
+
+        if ((currentVersion == None) and (self.plugin == None)):
+            self._error('Must provide either currentVersion or plugin reference')
+            return False
+        elif (currentVersion == None):
+            currentVersion = str(self.plugin.pluginVersion)
+            self._debug('Plugin version detected: %s' % currentVersion)
+        else:
+            self._debug('Plugin version provided: %s' % currentVersion)
 
         update = self.getUpdate(currentVersion)
 
