@@ -65,3 +65,13 @@ class Plugin(indigo.PluginBase):
         if (not canceled):
             self.debug = values.get('debug', False)
 
+    #---------------------------------------------------------------------------
+    def runConcurrentThread(self):
+        while True:
+            # this checks for any updates on a regular interval
+            self.updater.checkForUpdate()
+
+            # we are checking every 300 seconds (5 minutes) here as an example
+            # in practice, this should not be less than 3600 seconds (1 hour)
+            self.sleep(300)
+
