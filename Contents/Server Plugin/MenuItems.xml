@@ -8,4 +8,11 @@
     <Name>Toggle Debugging</Name>
     <CallbackMethod>toggleDebugging</CallbackMethod>
   </MenuItem>
+
+	<MenuItem id="separator1" type="separator" />
+
+  <MenuItem id="testUpdateCheck">
+    <Name>Test Update Check</Name>
+    <CallbackMethod>testUpdateCheck</CallbackMethod>
+  </MenuItem>
 </MenuItems>

@@ -56,6 +56,13 @@ class Plugin(indigo.PluginBase):
         self.updater.checkForUpdate(str(self.pluginVersion))
 
     #---------------------------------------------------------------------------
+    def testUpdateCheck(self):
+        indigo.server.log('-- BEGIN testUpdateCheck --')
+        self.updater.checkForUpdate()
+        self.updater.checkForUpdate('0.0.0')
+        indigo.server.log('-- END testUpdateCheck --')
+
+    #---------------------------------------------------------------------------
     def toggleDebugging(self):
         self.debug = not self.debug
         self.pluginPrefs['debug'] = self.debug
