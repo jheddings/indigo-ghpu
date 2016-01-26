@@ -8,12 +8,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# this module will check for newer releases on a github repo and update accordingly
-
-# in order for this to work properly, tags for releases should be in the format:
-#   v{major}.{minor}.{revision} - e.g. v1.0.0
-
-# also, only full releases will be used...  draft and pre-releases are not considered
+# for the latest version and documentation, visit https://github.com/jheddings/indigo-ghpu
 
 import json
 import httplib
