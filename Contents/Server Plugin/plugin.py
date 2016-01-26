@@ -22,11 +22,14 @@ class Plugin(indigo.PluginBase):
     def getPluginPath(self):
         self.debugLog('Looking for plugin installation: %s' % self.pluginId)
 
-        # assume the plugin is installed under the standard installation folder...
-        path = os.path.join(indigo.server.getInstallFolderPath(), 'Plugins', self.pluginDisplayName + '.indigoPlugin')
-        self.debugLog('Calculated plugin path: %s' % path)
+        pluginName = self.pluginDisplayName
+        indigoFolder = indigo.server.getInstallFolderPath()
 
-        plistFile = os.path.join(path, 'Contents', 'Info.plist')
+        # assume the plugin is installed under the standard installation folder...
+        pluginPath = os.path.join(indigoFolder, 'Plugins', pluginName + '.indigoPlugin')
+        self.debugLog('Calculated plugin path: %s' % pluginPath)
+
+        plistFile = os.path.join(pluginPath, 'Contents', 'Info.plist')
         self.debugLog('Plugin info file: %s' % plistFile)
 
         if (not os.path.isfile(plistFile)):
@@ -34,22 +37,22 @@ class Plugin(indigo.PluginBase):
             return None
 
         try:
-            # make sure the plugin is the by reading the info file
+            # make sure the plugin is the right one by reading the info file
             plist = plistlib.readPlist(plistFile)
             pluginId = plist.get('CFBundleIdentifier', None)
             self.debugLog('Found plugin: %s' % pluginId)
 
             if (self.pluginId == pluginId):
-                self.debugLog('Verified plugin path: %s' % path)
+                self.debugLog('Verified plugin path: %s' % pluginPath)
             else:
-                self.errorLog('Incorrect plugin ID in path: %s found, %s expected' % ( pluginId, self.pluginId ))
-                path = None
+                self.errorLog('Plugin ID mismatch: %s found, %s expected' % ( pluginId, self.pluginId ))
+                pluginPath = None
 
         except Exception as e:
             self.errorLog('Error reading Info.plist: %s' % str(e))
-            path = None
+            pluginPath = None
 
-        return path
+        return pluginPath
 
     #---------------------------------------------------------------------------
     def checkForUpdates(self):
