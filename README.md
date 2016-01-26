@@ -17,10 +17,12 @@ In your plugin, initialize the updater with your username and repository name:
 
     from ghpu import GitHubPluginUpdater
     ...
-    self.updater = GitHubPluginUpdater('jheddings', 'indigo-ghpu', self)
+    def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
+        self.updater = GitHubPluginUpdater('jheddings', 'indigo-ghpu', self)
 
-Providing the `self` reference to the udpater allows it to use the current plugin's logging
-methods.
+Of course, replace this repository with your own in the example above.  Providing the
+`self` reference to the udpater allows it to use the current plugin's logging methods
+and access to plugin properties.
 
 Either as a menu option, during `runConcurrentThread`, or by whatever method you choose,
 use the following method to check for new versions:
