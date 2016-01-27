@@ -29,6 +29,10 @@ class GitHubPluginUpdater(object):
         self._log('Checking for updates...')
 
         currentVersion = _resolveCurrentVersion(currentVersion)
+        if (currentVersion == None):
+            self._error('Could not resolve currentVersion')
+            return False
+
         update = self.getUpdate(currentVersion)
 
         if (update == None):
@@ -45,7 +49,9 @@ class GitHubPluginUpdater(object):
         self._log('Checking for updates...')
 
         currentVersion = self._resolveCurrentVersion(currentVersion)
-        if (currentVersion == None): return False
+        if (currentVersion == None):
+            self._error('Could not resolve currentVersion')
+            return False
 
         update = self.getUpdate(currentVersion)
 
