@@ -24,6 +24,10 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__del__(self)
 
     #---------------------------------------------------------------------------
+    def updatePlugin(self):
+        self.updater.update()
+
+    #---------------------------------------------------------------------------
     def checkForUpdates(self):
         self.updater.checkForUpdate()
 

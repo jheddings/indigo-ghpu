@@ -24,6 +24,22 @@ class GitHubPluginUpdater(object):
         self.plugin = plugin
 
     #---------------------------------------------------------------------------
+    # updates the contained plugin if needed
+    def updatePlugin(self, currentVersion=None, targetPath=None):
+        self._log('Checking for updates...')
+
+        currentVersion = _resolveCurrentVersion(currentVersion)
+        update = self.getUpdate(currentVersion)
+
+        if (update == None):
+            self._log('No updates are available')
+            return False
+
+        self._error('Plugin has been updated; restarting')
+        plugin = indigo.server.getPlugin(self.pluginId)
+        plugin.restart(waitUntilDone=False)
+
+    #---------------------------------------------------------------------------
     # returns the URL for an update if there is one
     def checkForUpdate(self, currentVersion=None):
         self._log('Checking for updates...')
