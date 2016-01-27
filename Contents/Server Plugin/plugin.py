@@ -30,8 +30,15 @@ class Plugin(indigo.PluginBase):
     #---------------------------------------------------------------------------
     def testUpdateCheck(self):
         indigo.server.log('-- BEGIN testUpdateCheck --')
+
         self.updater.checkForUpdate()
         self.updater.checkForUpdate('0.0.0')
+
+        emptyUpdater = GitHubPluginUpdater('jheddings', 'indigo-ghpu')
+        emptyUpdater.checkForUpdate()
+        emptyUpdater.checkForUpdate('0.0.0')
+        emptyUpdater.checkForUpdate(str(self.pluginVersion))
+
         indigo.server.log('-- END testUpdateCheck --')
 
     #---------------------------------------------------------------------------

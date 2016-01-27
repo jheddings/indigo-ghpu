@@ -29,6 +29,8 @@ class GitHubPluginUpdater(object):
         self._log('Checking for updates...')
 
         currentVersion = self._resolveCurrentVersion(currentVersion)
+        if (currentVersion == None): return False
+
         update = self.getUpdate(currentVersion)
 
         if (update == None):
@@ -105,7 +107,7 @@ class GitHubPluginUpdater(object):
     def _resolveCurrentVersion(self, currentVersion):
         if ((currentVersion == None) and (self.plugin == None)):
             self._error('Must provide either currentVersion or plugin reference')
-            return False
+            return None
         elif (currentVersion == None):
             currentVersion = str(self.plugin.pluginVersion)
             self._debug('Plugin version detected: %s' % currentVersion)
