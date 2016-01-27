@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.5
 
-import os, plistlib
+import os
 
 from ghpu import GitHubPluginUpdater
 
@@ -11,52 +11,21 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
         self.debug = pluginPrefs.get('debug', False)
-        self.pluginPath = self.getPluginPath()
         self.updater = GitHubPluginUpdater('jheddings', 'indigo-ghpu', self)
+
+        # http://forums.indigodomo.com/viewtopic.php?p=109939#p109939
+        # os.getcwd() returns the 'Server Plugin' folder of the plugin
+        # e.g. /Library/.../Plugins/MyPlugin.indigoPlugin/Contents/Server Plugin
+        # we want to get the base folder of the plugin, so jump up two dirs
+        self.pluginPath = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
 
     #---------------------------------------------------------------------------
     def __del__(self):
         indigo.PluginBase.__del__(self)
 
     #---------------------------------------------------------------------------
-    def getPluginPath(self):
-        self.debugLog('Looking for plugin installation: %s' % self.pluginId)
-
-        pluginName = self.pluginDisplayName
-        indigoFolder = indigo.server.getInstallFolderPath()
-
-        # assume the plugin is installed under the standard installation folder...
-        pluginPath = os.path.join(indigoFolder, 'Plugins', pluginName + '.indigoPlugin')
-        self.debugLog('Calculated plugin path: %s' % pluginPath)
-
-        plistFile = os.path.join(pluginPath, 'Contents', 'Info.plist')
-        self.debugLog('Plugin info file: %s' % plistFile)
-
-        if (not os.path.isfile(plistFile)):
-            self.errorLog('File not found: %s' % plistFile)
-            return None
-
-        try:
-            # make sure the plugin is the right one by reading the info file
-            plist = plistlib.readPlist(plistFile)
-            pluginId = plist.get('CFBundleIdentifier', None)
-            self.debugLog('Found plugin: %s' % pluginId)
-
-            if (self.pluginId == pluginId):
-                self.debugLog('Verified plugin path: %s' % pluginPath)
-            else:
-                self.errorLog('Plugin ID mismatch: %s found, %s expected' % ( pluginId, self.pluginId ))
-                pluginPath = None
-
-        except Exception as e:
-            self.errorLog('Error reading Info.plist: %s' % str(e))
-            pluginPath = None
-
-        return pluginPath
-
-    #---------------------------------------------------------------------------
     def checkForUpdates(self):
-        self.updater.checkForUpdate(str(self.pluginVersion))
+        self.updater.checkForUpdate()
 
     #---------------------------------------------------------------------------
     def testUpdateCheck(self):
