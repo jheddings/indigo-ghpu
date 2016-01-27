@@ -28,15 +28,7 @@ class GitHubPluginUpdater(object):
     def checkForUpdate(self, currentVersion=None):
         self._log('Checking for updates...')
 
-        if ((currentVersion == None) and (self.plugin == None)):
-            self._error('Must provide either currentVersion or plugin reference')
-            return False
-        elif (currentVersion == None):
-            currentVersion = str(self.plugin.pluginVersion)
-            self._debug('Plugin version detected: %s' % currentVersion)
-        else:
-            self._debug('Plugin version provided: %s' % currentVersion)
-
+        currentVersion = self._resolveCurrentVersion(currentVersion)
         update = self.getUpdate(currentVersion)
 
         if (update == None):
@@ -107,6 +99,20 @@ class GitHubPluginUpdater(object):
             return None
 
         return data
+
+    #---------------------------------------------------------------------------
+    # verifies and returns the current version based on user-supplied args
+    def _resolveCurrentVersion(self, currentVersion):
+        if ((currentVersion == None) and (self.plugin == None)):
+            self._error('Must provide either currentVersion or plugin reference')
+            return False
+        elif (currentVersion == None):
+            currentVersion = str(self.plugin.pluginVersion)
+            self._debug('Plugin version detected: %s' % currentVersion)
+        else:
+            self._debug('Plugin version provided: %s' % currentVersion)
+
+        return currentVersion
 
     #---------------------------------------------------------------------------
     # convenience method for log messages
