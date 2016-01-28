@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <MenuItems>
+  <MenuItem id="checkRateLimit">
+    <Name>Check Rate Limiter</Name>
+    <CallbackMethod>checkRateLimit</CallbackMethod>
+  </MenuItem>
   <MenuItem id="checkForUpdates">
     <Name>Check for Updates</Name>
     <CallbackMethod>checkForUpdates</CallbackMethod>
@@ -8,16 +12,20 @@
     <Name>Update Plugin</Name>
     <CallbackMethod>updatePlugin</CallbackMethod>
   </MenuItem>
+
+  <MenuItem id="separator1" type="separator" />
+
   <MenuItem id="toggleDebugging">
     <Name>Toggle Debugging</Name>
     <CallbackMethod>toggleDebugging</CallbackMethod>
   </MenuItem>
-
-	<MenuItem id="separator1" type="separator" />
-
   <MenuItem id="testUpdateCheck">
     <Name>Test Update Check</Name>
     <CallbackMethod>testUpdateCheck</CallbackMethod>
+  </MenuItem>
+  <MenuItem id="testBadRequests">
+    <Name>Test Bad Requests</Name>
+    <CallbackMethod>testBadRequests</CallbackMethod>
   </MenuItem>
   <MenuItem id="forceUpdate">
     <Name>Force Update</Name>
