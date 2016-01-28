@@ -26,42 +26,26 @@ class GitHubPluginUpdater(object):
     #---------------------------------------------------------------------------
     # updates the contained plugin if needed
     def updatePlugin(self, currentVersion=None, targetPath=None):
-        self._log('Checking for updates...')
+        update = _prepareForUpdate(currentVersion)
+        if (update == None): return False
 
-        currentVersion = _resolveCurrentVersion(currentVersion)
-        if (currentVersion == None):
-            self._error('Could not resolve currentVersion')
-            return False
+        # TODO download tarball from update (verify checksum?)
+        # TODO extract tarball in a temp older (verify contents?)
+        # TODO rsync -avz --delete --exclude ‘.git*’
+        # TODO clean everything up
 
-        update = self.getUpdate(currentVersion)
-
-        if (update == None):
-            self._log('No updates are available')
-            return False
-
-        self._error('Plugin has been updated; restarting')
+        self._log('Plugin has been updated; restarting')
         plugin = indigo.server.getPlugin(self.pluginId)
         plugin.restart(waitUntilDone=False)
+
+        return True
 
     #---------------------------------------------------------------------------
     # returns the URL for an update if there is one
     def checkForUpdate(self, currentVersion=None):
-        self._log('Checking for updates...')
+        update = self._prepareForUpdate(currentVersion)
 
-        currentVersion = self._resolveCurrentVersion(currentVersion)
-        if (currentVersion == None):
-            self._error('Could not resolve currentVersion')
-            return False
-
-        update = self.getUpdate(currentVersion)
-
-        if (update == None):
-            self._log('No updates are available')
-            return False
-
-        self._error('A new version is available: %s' % update['html_url'])
-
-        return True
+        return (update != None)
 
     #---------------------------------------------------------------------------
     # returns the update package, if there is one
@@ -125,8 +109,10 @@ class GitHubPluginUpdater(object):
         return data
 
     #---------------------------------------------------------------------------
-    # verifies and returns the current version based on user-supplied args
-    def _resolveCurrentVersion(self, currentVersion):
+    # prepare for an update
+    def _prepareForUpdate(self, currentVersion=None):
+        self._log('Checking for updates...')
+
         if ((currentVersion == None) and (self.plugin == None)):
             self._error('Must provide either currentVersion or plugin reference')
             return None
@@ -136,7 +122,15 @@ class GitHubPluginUpdater(object):
         else:
             self._debug('Plugin version provided: %s' % currentVersion)
 
-        return currentVersion
+        update = self.getUpdate(currentVersion)
+
+        if (update == None):
+            self._log('No updates are available')
+            return None
+
+        self._error('A new version is available: %s' % update['html_url'])
+
+        return update
 
     #---------------------------------------------------------------------------
     # convenience method for log messages
