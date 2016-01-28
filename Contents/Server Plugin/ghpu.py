@@ -81,6 +81,10 @@ class GitHubPluginUpdater(object):
         return (limit, remain, resetAt)
 
     #---------------------------------------------------------------------------
+    # should really only be used for testing and development...
+    def testBadRequest(self): self._GET('/undefined')
+
+    #---------------------------------------------------------------------------
     # form a GET request to api.github.com and return the parsed JSON response
     def _GET(self, requestPath):
         self._debug('GET %s' % requestPath)
@@ -95,16 +99,20 @@ class GitHubPluginUpdater(object):
         try:
             conn = httplib.HTTPSConnection('api.github.com')
             conn.request('GET', requestPath, None, headers)
+
             resp = conn.getresponse()
             self._debug('HTTP %d %s' % (resp.status, resp.reason))
 
             if (resp.status == 200):
                 data = json.loads(resp.read())
+            elif (400 <= resp.status < 500):
+                error = json.loads(resp.read())
+                self._error('Client Error: %s' % error['message'])
             else:
-                self._error('ERROR: %s' % resp.reason)
+                self._error('Unhandled Error: %s' % resp.reason)
 
         except Exception as e:
-            self._error(str(e))
+            self._error('Unhandled Exception: %s' % str(e))
             return None
 
         return data
