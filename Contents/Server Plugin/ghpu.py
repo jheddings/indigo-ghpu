@@ -63,8 +63,22 @@ class GitHubPluginUpdater(object):
 
     #---------------------------------------------------------------------------
     # returns the latest release information from a given user / repo
+    # https://developer.github.com/v3/repos/releases/
     def getLatestRelease(self):
         return self._GET('/repos/' + self.owner + '/' + self.repo + '/releases/latest')
+
+    #---------------------------------------------------------------------------
+    # returns a tuple for the current rate limit: (limit, remaining, resetTime)
+    # https://developer.github.com/v3/rate_limit/
+    # NOTE this does not count against the current limit
+    def getRateLimit(self):
+        limiter = self._GET('/rate_limit')
+
+        remain = int(limiter['rate']['remaining'])
+        limit = int(limiter['rate']['limit'])
+        resetAt = int(limiter['rate']['reset'])
+
+        return (limit, remain, resetAt)
 
     #---------------------------------------------------------------------------
     # form a GET request to api.github.com and return the parsed JSON response
@@ -82,14 +96,7 @@ class GitHubPluginUpdater(object):
             conn = httplib.HTTPSConnection('api.github.com')
             conn.request('GET', requestPath, None, headers)
             resp = conn.getresponse()
-
-            # maybe check out https://developer.github.com/v3/rate_limit/
-            rateLimit = int(resp.getheader('X-RateLimit-Limit', -1))
-            rateRemain = int(resp.getheader('X-RateLimit-Remaining', -1))
-            rateReset = int(resp.getheader('X-RateLimit-Reset', -1))
-
             self._debug('HTTP %d %s' % (resp.status, resp.reason))
-            self._debug('Rate Limit: %d/%d' % (rateRemain, rateLimit))
 
             if (resp.status == 200):
                 data = json.loads(resp.read())

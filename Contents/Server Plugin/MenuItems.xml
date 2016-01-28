@@ -4,6 +4,10 @@
     <Name>Check for Updates</Name>
     <CallbackMethod>checkForUpdates</CallbackMethod>
   </MenuItem>
+  <MenuItem id="checkRateLimit">
+    <Name>Check Rate Limiter</Name>
+    <CallbackMethod>checkRateLimit</CallbackMethod>
+  </MenuItem>
   <MenuItem id="toggleDebugging">
     <Name>Toggle Debugging</Name>
     <CallbackMethod>toggleDebugging</CallbackMethod>

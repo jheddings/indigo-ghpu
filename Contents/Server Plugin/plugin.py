@@ -28,6 +28,11 @@ class Plugin(indigo.PluginBase):
         self.updater.checkForUpdate()
 
     #---------------------------------------------------------------------------
+    def checkRateLimit(self):
+        limiter = self.updater.getRateLimit()
+        indigo.server.log('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)
+
+    #---------------------------------------------------------------------------
     def testUpdateCheck(self):
         indigo.server.log('-- BEGIN testUpdateCheck --')
 
