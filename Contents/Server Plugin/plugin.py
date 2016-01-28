@@ -24,6 +24,10 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__del__(self)
 
     #---------------------------------------------------------------------------
+    def forceUpdate(self):
+        self.updater.update(currentVersion='0.0.0')
+
+    #---------------------------------------------------------------------------
     def updatePlugin(self):
         self.updater.update()
 

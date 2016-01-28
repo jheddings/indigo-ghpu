@@ -19,4 +19,8 @@
     <Name>Test Update Check</Name>
     <CallbackMethod>testUpdateCheck</CallbackMethod>
   </MenuItem>
+  <MenuItem id="forceUpdate">
+    <Name>Force Update</Name>
+    <CallbackMethod>forceUpdate</CallbackMethod>
+  </MenuItem>
 </MenuItems>
