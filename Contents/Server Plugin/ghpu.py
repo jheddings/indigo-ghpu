@@ -12,9 +12,12 @@
 
 import json
 import httplib
-import zipfile
 import tempfile
 import indigo
+
+from urllib2 import urlopen
+from StringIO import StringIO
+from zipfile import ZipFile
 
 ################################################################################
 class GitHubPluginUpdater(object):
@@ -34,10 +37,21 @@ class GitHubPluginUpdater(object):
         tmpdir = tempfile.gettempdir()
         self._debug('Workspace: %s' % tmpdir)
 
-        # TODO download zipfile from update (verify checksum?)
-        # TODO extract tarball in a temp older (verify contents?)
-        # TODO rsync -avz --delete --exclude '.git*'
-        # TODO clean everything up
+        # download and verify zipfile from update
+        zipball = update['zipball_url']
+        self._debug('Downloading zip file: %s' % zipball)
+
+        zipdata = urlopen(zipball).read()
+        zipfile = ZipFile(StringIO(zipdata))
+
+        self._debug('Verifying zip file (%d bytes)...' % len(zipdata))
+        if (zipfile.testzip() != None):
+            self._error('Download corrupted')
+            return False
+
+        # TODO extract zipball in a temp older
+        # TODO move current plugin to trash
+        # TODO move new plugin into place
 
         if (self.plugin):
             self._log('Plugin has been updated; restarting')
