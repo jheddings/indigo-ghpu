@@ -12,6 +12,8 @@
 
 import json
 import httplib
+import zipfile
+import tempfile
 import indigo
 
 ################################################################################
@@ -29,7 +31,10 @@ class GitHubPluginUpdater(object):
         update = self._prepareForUpdate(currentVersion)
         if (update == None): return False
 
-        # TODO download tarball from update (verify checksum?)
+        tmpdir = tempfile.gettempdir()
+        self._debug('Workspace: %s' % tmpdir)
+
+        # TODO download zipfile from update (verify checksum?)
         # TODO extract tarball in a temp older (verify contents?)
         # TODO rsync -avz --delete --exclude '.git*'
         # TODO clean everything up
