@@ -63,13 +63,6 @@ class GitHubPluginUpdater(object):
             self._error(str(e))
             return False
 
-        # XXX this won't be necessary if we can figure
-        # out how to install a plugin programmatically
-        if (self.plugin):
-            self._log('Plugin has been updated; restarting')
-            plugin = indigo.server.getPlugin(self.plugin.pluginId)
-            plugin.restart(waitUntilDone=False)
-
         return True
 
     #---------------------------------------------------------------------------
