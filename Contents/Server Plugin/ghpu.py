@@ -186,13 +186,10 @@ class GitHubPluginUpdater(object):
         plist = plistlib.readPlistFromString(plistData)
 
         pluginId = plist.get('CFBundleIdentifier', None)
-        self._debug('Detected pluginId in zipfile: %s' % pluginId)
-
         pluginName = plist.get('CFBundleDisplayName', None)
-        self._debug('Detected pluginName in zipfile: %s' % pluginName)
-
         pluginVersion = plist.get('PluginVersion', None)
-        self._debug('Detected pluginNersion in zipfile: %s' % pluginVersion)
+
+        self._debug('Detected plugin: %s (%s-%s)' % (pluginId, pluginName, pluginVersion))
 
         if (pluginId == None):
             raise Exception('Unable to detect pluginId in download')
