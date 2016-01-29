@@ -10,9 +10,8 @@
 
 # for the latest version and documentation, visit https://github.com/jheddings/indigo-ghpu
 
-import json
-import httplib
-import tempfile
+import os, tempfile, shutil
+import json, httplib, plistlib
 import indigo
 
 from urllib2 import urlopen
@@ -29,29 +28,34 @@ class GitHubPluginUpdater(object):
         self.plugin = plugin
 
     #---------------------------------------------------------------------------
+    # install the latest version of the plugin represented by this updater
+    def install(self):
+        self._log('Installing plugin from %s/%s...' % (self.owner, self.repo))
+        latestRelease = self.getLatestRelease()
+
+        if (latestRelease == None):
+            self._error('No release available')
+            return False
+
+        try:
+            self._installRelease(latestRelease)
+        except Exception as e:
+            self._error(str(e))
+            return False
+
+        return True
+
+    #---------------------------------------------------------------------------
     # updates the contained plugin if needed
-    def update(self, currentVersion=None, targetPath=None):
+    def update(self, currentVersion=None):
         update = self._prepareForUpdate(currentVersion)
         if (update == None): return False
 
-        tmpdir = tempfile.gettempdir()
-        self._debug('Workspace: %s' % tmpdir)
-
-        # download and verify zipfile from update
-        zipball = update['zipball_url']
-        self._debug('Downloading zip file: %s' % zipball)
-
-        zipdata = urlopen(zipball).read()
-        zipfile = ZipFile(StringIO(zipdata))
-
-        self._debug('Verifying zip file (%d bytes)...' % len(zipdata))
-        if (zipfile.testzip() != None):
-            self._error('Download corrupted')
+        try:
+            self._installRelease(update)
+        except Exception as e:
+            self._error(str(e))
             return False
-
-        # TODO extract zipball in a temp older
-        # TODO move current plugin to trash
-        # TODO move new plugin into place
 
         if (self.plugin):
             self._log('Plugin has been updated; restarting')
@@ -91,6 +95,7 @@ class GitHubPluginUpdater(object):
     # returns the latest release information from a given user / repo
     # https://developer.github.com/v3/repos/releases/
     def getLatestRelease(self):
+        self._debug('Getting latest release from %s/%s...' % (self.owner, self.repo))
         return self._GET('/repos/' + self.owner + '/' + self.repo + '/releases/latest')
 
     #---------------------------------------------------------------------------
@@ -105,10 +110,6 @@ class GitHubPluginUpdater(object):
         resetAt = int(limiter['rate']['reset'])
 
         return (limit, remain, resetAt)
-
-    #---------------------------------------------------------------------------
-    # should really only be used for testing and development...
-    def testBadRequest(self): self._GET('/undefined')
 
     #---------------------------------------------------------------------------
     # form a GET request to api.github.com and return the parsed JSON response
@@ -166,6 +167,61 @@ class GitHubPluginUpdater(object):
         self._error('A new version is available: %s' % update['html_url'])
 
         return update
+
+    #---------------------------------------------------------------------------
+    # install the given release
+    def _installRelease(self, release):
+        # download and verify zipfile from release
+        zipball = release['zipball_url']
+        self._debug('Downloading zip file: %s' % zipball)
+
+        zipdata = urlopen(zipball).read()
+        zipfile = ZipFile(StringIO(zipdata))
+
+        self._debug('Verifying zip file (%d bytes)...' % len(zipdata))
+        if (zipfile.testzip() != None):
+            raise Exception('Download corrupted')
+
+        # the top level directory should be the first entry in the zipfile
+        # it is typically a combination of the owner, repo & release tag
+        repotag = zipfile.namelist()[0]
+
+        # try to read and confirm the plugin info contained in the zip
+        plistFile = os.path.join(repotag, 'Contents', 'Info.plist')
+        self._debug('Searching for plugin info: %s' % plistFile)
+
+        plistData = zipfile.read(plistFile)
+        plist = plistlib.readPlistFromString(plistData)
+
+        newPluginId = plist.get('CFBundleIdentifier', None)
+        self._debug('Detected plugin in zipfile: %s' % newPluginId)
+
+        if (newPluginId == None):
+            raise Exception('Unable to detect plugin in download')
+        elif (self.plugin and self.plugin.pluginId != newPluginId):
+            raise Exception('ID mismatch in download')
+
+        # this is where the files will end up after extraction
+        tmpdir = tempfile.gettempdir()
+        srcdir = os.path.join(tmpdir, repotag)
+        self._debug('Local folder: %s' % srcdir)
+
+        # if srcdir exists before extracting, give up
+        if (os.path.exists(srcdir)):
+            raise Exception('Destination directory exists: %s' % srcdir)
+
+        # extract zipfile contents to temp folder
+        zipfile.extractall(tmpdir)
+
+        # TODO move current plugin to trash
+        # TODO move new plugin into place
+
+        # if srcdir exists at this point, the install didn't happen
+        if (os.path.exists(srcdir)):
+            shutil.rmtree(srcdir)
+            raise Exception('Plugin installation canceled')
+
+        return True
 
     #---------------------------------------------------------------------------
     # convenience method for log messages

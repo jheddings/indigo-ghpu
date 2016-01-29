@@ -24,6 +24,10 @@ class Plugin(indigo.PluginBase):
         indigo.PluginBase.__del__(self)
 
     #---------------------------------------------------------------------------
+    def selfInstall(self):
+        self.updater.install()
+
+    #---------------------------------------------------------------------------
     def forceUpdate(self):
         self.updater.update(currentVersion='0.0.0')
 
@@ -39,14 +43,6 @@ class Plugin(indigo.PluginBase):
     def checkRateLimit(self):
         limiter = self.updater.getRateLimit()
         indigo.server.log('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)
-
-    #---------------------------------------------------------------------------
-    def testBadRequests(self):
-        indigo.server.log('-- BEGIN testBadRequests --')
-
-        self.updater.testBadRequest()
-
-        indigo.server.log('-- END testBadRequests --')
 
     #---------------------------------------------------------------------------
     def testUpdateCheck(self):

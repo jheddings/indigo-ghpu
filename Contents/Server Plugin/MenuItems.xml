@@ -31,4 +31,8 @@
     <Name>Force Update</Name>
     <CallbackMethod>forceUpdate</CallbackMethod>
   </MenuItem>
+  <MenuItem id="selfInstall">
+    <Name>Self Install</Name>
+    <CallbackMethod>selfInstall</CallbackMethod>
+  </MenuItem>
 </MenuItems>
