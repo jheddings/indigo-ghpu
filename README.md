@@ -4,8 +4,7 @@ This is an Indigo plugin updater for plugins released on GitHub.  To help illust
 usage, this project also happens to be a plugin, although not a very useful one.
 
 When creating releases for your plugins, you should use the `v{major}.{minor}.{revision}`
-format.  This will help ensure compatibility with Indigo's
-[plugin versioning scheme](http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:plugin_guide#the_infoplist_file).
+format.  This will help ensure compatibility with Indigo's [plugin versioning scheme](http://wiki.indigodomo.com/doku.php?id=indigo_6_documentation:plugin_guide#the_infoplist_file).
 
 ## Installation
 
@@ -23,7 +22,8 @@ In your plugin, initialize the updater with your username and repository name:
 
 Of course, replace this repository with your own in the example above.  Providing the
 `self` reference to the udpater allows it to use the current plugin's logging methods
-and access to plugin properties.
+and access to plugin properties.  The plugin instannce is also used to verify several
+phases of the update process.
 
 Either as a menu option, during `runConcurrentThread`, or by whatever method you choose,
 use the following method to check for new versions:
@@ -37,3 +37,17 @@ You may optionally provide the version you want to compare against, like this:
 
 This form is required if you do not provide the plugin reference when constructing the
 updater.
+
+Similarly, to automatically update the plugin to the latest release (if needed), use the
+following command:
+
+    self.updater.update()
+
+This will most often be called from a menu item.  The `update()` method also supports
+passing the current version to compare against.
+
+## Ideas for Later
+
+It might be interesting to see if this plugin could be extend to manange other plugins for
+Indigo.  Perhaps by adding plugins as "devices", this plugin could check for (and apply)
+latest updates.  It may even be able to do the initial installation when adding a device.
