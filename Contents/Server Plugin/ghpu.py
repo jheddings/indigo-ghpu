@@ -171,19 +171,12 @@ class GitHubPluginUpdater(object):
         return update
 
     #---------------------------------------------------------------------------
-    # install the given release
-    def _installRelease(self, release):
-        tmpdir = tempfile.gettempdir()
-        self._debug('Workspace: %s' % tmpdir)
-
-        zipfile = self._getZipFileFromRelease(release)
-
-        # the top level directory should be the first entry in the zipfile
-        # it is typically a combination of the owner, repo & release tag
-        repotag = zipfile.namelist()[0]
+    # verifies the plugin info in the zipfile and returns the confirmed name-version
+    def _verifyPluginInfo(self, zipfile):
+        topdir = zipfile.namelist()[0]
 
         # read and confirm the plugin info contained in the zipfile
-        plistFile = os.path.join(repotag, 'Contents', 'Info.plist')
+        plistFile = os.path.join(topdir, 'Contents', 'Info.plist')
         self._debug('Searching for plugin info: %s' % plistFile)
 
         plistData = zipfile.read(plistFile)
@@ -192,33 +185,50 @@ class GitHubPluginUpdater(object):
 
         plist = plistlib.readPlistFromString(plistData)
 
-        newPluginId = plist.get('CFBundleIdentifier', None)
-        self._debug('Detected plugin in zipfile: %s' % newPluginId)
+        pluginId = plist.get('CFBundleIdentifier', None)
+        self._debug('Detected pluginId in zipfile: %s' % pluginId)
 
-        newPluginName = plist.get('CFBundleDisplayName', None)
-        self._debug('Detected name in zipfile: %s' % newPluginName)
+        pluginName = plist.get('CFBundleDisplayName', None)
+        self._debug('Detected pluginName in zipfile: %s' % pluginName)
 
-        newPluginVersion = plist.get('PluginVersion', None)
-        self._debug('Detected version in zipfile: %s' % newPluginVersion)
+        pluginVersion = plist.get('PluginVersion', None)
+        self._debug('Detected pluginNersion in zipfile: %s' % pluginVersion)
 
-        if ((newPluginId == None) or (newPluginName == None) or (newPluginVersion == None)):
-            raise Exception('Unable to detect plugin in download')
-        elif (self.plugin and (self.plugin.pluginId != newPluginId)):
+        if (pluginId == None):
+            raise Exception('Unable to detect pluginId in download')
+        elif (pluginName == None):
+            raise Exception('Unable to detect pluginName in download')
+        elif (pluginVersion == None):
+            raise Exception('Unable to detect pluginVersion in download')
+        elif (self.plugin and (self.plugin.pluginId != pluginId)):
             raise Exception('ID mismatch in download')
+
+        return pluginName + '-' + pluginVersion
+
+    #---------------------------------------------------------------------------
+    # install a given release
+    def _installRelease(self, release):
+        tmpdir = tempfile.gettempdir()
+        self._debug('Workspace: %s' % tmpdir)
+
+        zipfile = self._getZipFileFromRelease(release)
+
+        newPluginName = self._verifyPluginInfo(zipfile)
+        self._debug('Found plugin in download: %s' % newPluginName)
+
+        # the top level directory should be the first entry in the zipfile
+        # it is typically a combination of the owner, repo & release tag
+        repotag = zipfile.namelist()[0]
 
         # this is where the files will end up after extraction
         destDir = os.path.join(tmpdir, repotag)
         self._debug('Destination directory: %s' % destDir)
-
-        if (os.path.exists(destDir)):
-            raise Exception('Destination directory exists: %s' % destDir)
+        if (os.path.exists(destDir)): shutil.rmtree(destDir)
 
         # this is where the plugin will reside prior to installation
         newPluginDir = os.path.join(tmpdir, newPluginName + '.indigoPlugin')
-        self._debug('Plugin package directory: %s' % newPluginDir)
-
-        if (os.path.exists(newPluginDir)):
-            raise Exception('Package exists: %s' % newPluginDir)
+        self._debug('Plugin directory: %s' % newPluginDir)
+        if (os.path.exists(newPluginDir)): shutil.rmtree(newPluginDir)
 
         # at this point, we should have been able to confirm the top-level directory
         # based on reading the pluginId, we know the plugin in the zipfile matches our
@@ -234,12 +244,8 @@ class GitHubPluginUpdater(object):
         # for 'open' to work properly, we need to use the .indigoPlugin package extension
         os.rename(destDir, newPluginDir)
 
-        self._debug('Installing new plugin from: %s' % newPluginDir)
+        self._debug('Installing %s' % newPluginName)
         subprocess.call(['open', newPluginDir])
-
-        # clean up our mess...
-        if (os.path.exists(destDir)): shutil.rmtree(destDir)
-        if (os.path.exists(newPluginDir)): shutil.rmtree(newPluginDir)
 
         # all clear...  the new plugin has been installed
 
