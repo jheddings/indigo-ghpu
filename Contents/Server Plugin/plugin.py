@@ -13,12 +13,6 @@ class Plugin(indigo.PluginBase):
         self.debug = pluginPrefs.get('debug', False)
         self.updater = GitHubPluginUpdater('jheddings', 'indigo-ghpu', self)
 
-        # http://forums.indigodomo.com/viewtopic.php?p=109939#p109939
-        # os.getcwd() returns the 'Server Plugin' folder of the plugin
-        # e.g. /Library/.../Plugins/MyPlugin.indigoPlugin/Contents/Server Plugin
-        # we want to get the base folder of the plugin, so jump up two dirs
-        self.pluginPath = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
-
     #---------------------------------------------------------------------------
     def __del__(self):
         indigo.PluginBase.__del__(self)
