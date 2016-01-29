@@ -11,8 +11,13 @@
 # for the latest version and documentation:
 # https://github.com/jheddings/indigo-ghpu
 
-import os, tempfile, shutil
-import json, httplib, plistlib
+import os
+import tempfile
+import subprocess
+import shutil
+import json
+import httplib
+import plistlib
 import indigo
 
 from urllib2 import urlopen
@@ -184,7 +189,7 @@ class GitHubPluginUpdater(object):
         # it is typically a combination of the owner, repo & release tag
         repotag = zipfile.namelist()[0]
 
-        # try to read and confirm the plugin info contained in the zipfile
+        # read and confirm the plugin info contained in the zipfile
         plistFile = os.path.join(repotag, 'Contents', 'Info.plist')
         self._debug('Searching for plugin info: %s' % plistFile)
 
@@ -197,42 +202,53 @@ class GitHubPluginUpdater(object):
         newPluginId = plist.get('CFBundleIdentifier', None)
         self._debug('Detected plugin in zipfile: %s' % newPluginId)
 
+        newPluginName = plist.get('CFBundleDisplayName', None)
+        self._debug('Detected name in zipfile: %s' % newPluginName)
+
         newPluginVersion = plist.get('PluginVersion', None)
         self._debug('Detected version in zipfile: %s' % newPluginVersion)
 
-        if ((newPluginId == None) or (newPluginVersion == None)):
+        if ((newPluginId == None) or (newPluginName == None) or (newPluginVersion == None)):
             raise Exception('Unable to detect plugin in download')
         elif (self.plugin and (self.plugin.pluginId != newPluginId)):
             raise Exception('ID mismatch in download')
 
         # this is where the files will end up after extraction
-        srcdir = os.path.join(tmpdir, repotag)
-        self._debug('New plugin folder: %s' % srcdir)
+        destDir = os.path.join(tmpdir, repotag)
+        self._debug('Destination directory: %s' % destDir)
 
-        # if srcdir exists before extracting, give up
-        if (os.path.exists(srcdir)):
-            raise Exception('Destination directory exists: %s' % srcdir)
+        if (os.path.exists(destDir)):
+            raise Exception('Destination directory exists: %s' % destDir)
+
+        # this is where the plugin will reside prior to installation
+        newPluginDir = os.path.join(tmpdir, newPluginName + '.indigoPlugin')
+        self._debug('Plugin package directory: %s' % newPluginDir)
+
+        if (os.path.exists(newPluginDir)):
+            raise Exception('Package exists: %s' % newPluginDir)
 
         # at this point, we should have been able to confirm the top-level directory
         # based on reading the pluginId, we know the plugin in the zipfile matches our
-        # internal plugin reference (if we have one) and we know the temp directory is
-        # available to begin extraction...
+        # internal plugin reference (if we have one), temp directories are available
+        # and we know the package location for installing the plugin
 
         zipfile.extractall(tmpdir)
 
         # now, make sure we got what we expected
-        if (not os.path.exists(srcdir)):
+        if (not os.path.exists(destDir)):
             raise Exception('Failed to extract plugin')
 
-        # TODO move current plugin to trash
-        # TODO move new plugin into place
+        # for 'open' to work properly, we need to use the .indigoPlugin package extension
+        os.rename(destDir, newPluginDir)
 
-        # if srcdir still exists at this point, the install didn't happen
-        if (os.path.exists(srcdir)):
-            shutil.rmtree(srcdir)
-            raise Exception('Plugin installation canceled')
+        self._debug('Installing new plugin from: %s' % newPluginDir)
+        subprocess.call(['open', newPluginDir])
 
-        return True
+        # clean up our mess...
+        if (os.path.exists(destDir)): shutil.rmtree(destDir)
+        if (os.path.exists(newPluginDir)): shutil.rmtree(newPluginDir)
+
+        # all clear...  the new plugin has been installed
 
     #---------------------------------------------------------------------------
     # return the valid zipfile from the release, or raise an exception
