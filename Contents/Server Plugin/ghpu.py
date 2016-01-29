@@ -197,9 +197,12 @@ class GitHubPluginUpdater(object):
         newPluginId = plist.get('CFBundleIdentifier', None)
         self._debug('Detected plugin in zipfile: %s' % newPluginId)
 
-        if (newPluginId == None):
+        newPluginVersion = plist.get('PluginVersion', None)
+        self._debug('Detected version in zipfile: %s' % newPluginVersion)
+
+        if ((newPluginId == None) or (newPluginVersion == None)):
             raise Exception('Unable to detect plugin in download')
-        elif (self.plugin and self.plugin.pluginId != newPluginId):
+        elif (self.plugin and (self.plugin.pluginId != newPluginId)):
             raise Exception('ID mismatch in download')
 
         # this is where the files will end up after extraction
