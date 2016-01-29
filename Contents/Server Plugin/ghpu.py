@@ -189,7 +189,7 @@ class GitHubPluginUpdater(object):
         pluginName = plist.get('CFBundleDisplayName', None)
         pluginVersion = plist.get('PluginVersion', None)
 
-        self._debug('Detected plugin: %s (%s-%s)' % (pluginId, pluginName, pluginVersion))
+        self._debug('Detected plugin in zipfile: %s' % pluginId)
 
         if (pluginId == None):
             raise Exception('Unable to detect pluginId in download')
@@ -200,6 +200,8 @@ class GitHubPluginUpdater(object):
         elif (self.plugin and (self.plugin.pluginId != pluginId)):
             raise Exception('ID mismatch in download')
 
+        self._debug('Found plugin: %s' % (pluginName, pluginVersion))
+
         return pluginName + '-' + pluginVersion
 
     #---------------------------------------------------------------------------
@@ -209,9 +211,7 @@ class GitHubPluginUpdater(object):
         self._debug('Workspace: %s' % tmpdir)
 
         zipfile = self._getZipFileFromRelease(release)
-
         newPluginName = self._verifyPluginInfo(zipfile)
-        self._debug('Found plugin in download: %s' % newPluginName)
 
         # the top level directory should be the first entry in the zipfile
         # it is typically a combination of the owner, repo & release tag
