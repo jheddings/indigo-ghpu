@@ -200,7 +200,7 @@ class GitHubPluginUpdater(object):
         elif (self.plugin and (self.plugin.pluginId != pluginId)):
             raise Exception('ID mismatch in download')
 
-        self._debug('Found plugin: %s' % (pluginName, pluginVersion))
+        self._debug('Found plugin: %s-%s' % (pluginName, pluginVersion))
 
         return pluginName + '-' + pluginVersion
 
