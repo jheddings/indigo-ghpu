@@ -23,16 +23,12 @@
     <Name>Test Update Check</Name>
     <CallbackMethod>testUpdateCheck</CallbackMethod>
   </MenuItem>
-  <MenuItem id="testBadRequests">
-    <Name>Test Bad Requests</Name>
-    <CallbackMethod>testBadRequests</CallbackMethod>
+  <MenuItem id="selfInstall">
+    <Name>Self Install</Name>
+    <CallbackMethod>selfInstall</CallbackMethod>
   </MenuItem>
   <MenuItem id="forceUpdate">
     <Name>Force Update</Name>
     <CallbackMethod>forceUpdate</CallbackMethod>
-  </MenuItem>
-  <MenuItem id="selfInstall">
-    <Name>Self Install</Name>
-    <CallbackMethod>selfInstall</CallbackMethod>
   </MenuItem>
 </MenuItems>
