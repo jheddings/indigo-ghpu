@@ -20,6 +20,8 @@ import httplib
 import plistlib
 import indigo
 
+import ConfigParser
+
 from urllib2 import urlopen
 from StringIO import StringIO
 from zipfile import ZipFile
@@ -28,9 +30,14 @@ from zipfile import ZipFile
 class GitHubPluginUpdater(object):
 
     #---------------------------------------------------------------------------
-    def __init__(self, owner, repo, plugin=None):
-        self.owner = owner
-        self.repo = repo
+    def __init__(self, plugin=None):
+        config = ConfigParser.RawConfigParser()
+        config.read('ghpu.cfg')
+
+        self.repo = config.get('repository', 'name')
+        self.owner = config.get('repository', 'owner')
+        # TODO error checking on configuration
+
         self.plugin = plugin
 
     #---------------------------------------------------------------------------

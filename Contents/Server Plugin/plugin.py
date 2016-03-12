@@ -11,7 +11,7 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
         self.debug = pluginPrefs.get('debug', False)
-        self.updater = GitHubPluginUpdater('jheddings', 'indigo-ghpu', self)
+        self.updater = GitHubPluginUpdater(self)
 
     #---------------------------------------------------------------------------
     def __del__(self):
