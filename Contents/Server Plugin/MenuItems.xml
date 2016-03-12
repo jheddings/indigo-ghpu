@@ -27,6 +27,10 @@
     <Name>Self Install</Name>
     <CallbackMethod>selfInstall</CallbackMethod>
   </MenuItem>
+  <MenuItem id="dryRunInstall">
+    <Name>Dry Run</Name>
+    <CallbackMethod>dryRunInstall</CallbackMethod>
+  </MenuItem>
   <MenuItem id="forceUpdate">
     <Name>Force Update</Name>
     <CallbackMethod>forceUpdate</CallbackMethod>

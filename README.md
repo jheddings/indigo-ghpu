@@ -11,19 +11,26 @@ format.  This will help ensure compatibility with Indigo's [plugin versioning sc
 To install this in your plugin, simply copy the latest version of `ghpu.py` to your plugin
 folder.  Check back occasionally to see if updates have been made.
 
+## Configuration
+
+In order for the GitHub Plugin Updater to work properly, you will need to configure the
+`ghpu.cfg` file.  This file must be placed in the same folder as your `plugin.py` file.
+
+See the [sample configuration file](https://github.com/jheddings/indigo-ghpu/blob/master/Contents/Server%20Plugin/ghpu.cfg)
+for more details.
+
 ## Usage
 
-In your plugin, initialize the updater with your username and repository name:
+In your plugin, initialize the updater during your plugin's `__init__` method:
 
     from ghpu import GitHubPluginUpdater
     ...
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
-        self.updater = GitHubPluginUpdater('jheddings', 'indigo-ghpu', self)
+        self.updater = GitHubPluginUpdater(self)
 
-Of course, replace this repository with your own in the example above.  Providing the
-`self` reference to the udpater allows it to use the current plugin's logging methods
-and access to plugin properties.  The plugin instannce is also used to verify several
-phases of the update process.
+Providing the `self` reference to the udpater allows it to use the current plugin's
+logging methods and access to plugin properties.  The plugin instannce is also used to
+verify several phases of the update process.
 
 Either as a menu option, during `runConcurrentThread`, or by whatever method you choose,
 use the following method to check for new versions:
