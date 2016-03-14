@@ -34,10 +34,6 @@ class Plugin(indigo.PluginBase):
         self.updater.checkForUpdate()
 
     #---------------------------------------------------------------------------
-    def dryRunInstall(self):
-        self.updater.install(dryrun=True)
-
-    #---------------------------------------------------------------------------
     def checkRateLimit(self):
         limiter = self.updater.getRateLimit()
         indigo.server.log('RateLimit {limit:%d remaining:%d resetAt:%d}' % limiter)

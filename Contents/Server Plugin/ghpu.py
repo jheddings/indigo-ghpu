@@ -18,21 +18,21 @@ import shutil
 import json
 import httplib
 import plistlib
-import indigo
 
 import ConfigParser
 
 from urllib2 import urlopen
 from StringIO import StringIO
 from zipfile import ZipFile
+from collections import namedtuple
 
 ################################################################################
 class GitHubPluginUpdater(object):
 
     #---------------------------------------------------------------------------
-    def __init__(self, plugin=None):
+    def __init__(self, plugin=None, configFile='ghpu.cfg'):
         config = ConfigParser.RawConfigParser()
-        config.read('ghpu.cfg')
+        config.read(configFile)
 
         self.repo = config.get('repository', 'name')
         self.owner = config.get('repository', 'owner')
@@ -48,7 +48,7 @@ class GitHubPluginUpdater(object):
 
     #---------------------------------------------------------------------------
     # install the latest version of the plugin represented by this updater
-    def install(self, dryrun=False):
+    def install(self):
         self._log('Installing plugin from %s/%s...' % (self.owner, self.repo))
         latestRelease = self.getLatestRelease()
 
@@ -57,7 +57,7 @@ class GitHubPluginUpdater(object):
             return False
 
         try:
-            self._installRelease(latestRelease, dryrun)
+            self._installRelease(latestRelease)
         except Exception as e:
             self._error(str(e))
             return False
@@ -66,12 +66,12 @@ class GitHubPluginUpdater(object):
 
     #---------------------------------------------------------------------------
     # updates the contained plugin if needed
-    def update(self, currentVersion=None, dryrun=False):
+    def update(self, currentVersion=None):
         update = self._prepareForUpdate(currentVersion)
         if (update == None): return False
 
         try:
-            self._installRelease(update, dryrun)
+            self._installRelease(update)
         except Exception as e:
             self._error(str(e))
             return False
@@ -184,13 +184,34 @@ class GitHubPluginUpdater(object):
         return update
 
     #---------------------------------------------------------------------------
-    # verifies the plugin info in the zipfile and returns the confirmed name-version
-    def _verifyPluginInfo(self, zipfile):
+    # reads plugin info from the given pList
+    def _buildPluginInfo(self, plist):
+        pid = plist.get('CFBundleIdentifier', None),
+        pname = pluginName = plist.get('CFBundleDisplayName', None),
+        pver = pluginVersion = plist.get('PluginVersion', None)
+
+        PluginInfo = namedtuple('PluginInfo', 'id name version')
+
+        return PluginInfo(id=pid, name=pname, version=pver)
+
+    #---------------------------------------------------------------------------
+    # reads the plugin info from the given path
+    def _readPluginInfoFromPath(self, path):
+        plistFile = os.path.join(path, 'Contents', 'Info.plist')
+        self._debug('Loading plugin info: %s' % plistFile)
+
+        plist = plistlib.readPlist(plistFile)
+
+        return self._buildPluginInfo(plist)
+
+    #---------------------------------------------------------------------------
+    # finds the plugin information in the zipfile
+    def _readPluginInfoFromArchive(self, zipfile):
         topdir = zipfile.namelist()[0]
 
-        # read and confirm the plugin info contained in the zipfile
+        # read and the plugin info contained in the zipfile
         plistFile = os.path.join(topdir, self.path, 'Contents', 'Info.plist')
-        self._debug('Searching for plugin info: %s' % plistFile)
+        self._debug('Reading plugin info: %s' % plistFile)
 
         plistData = zipfile.read(plistFile)
         if (plistData == None):
@@ -198,34 +219,35 @@ class GitHubPluginUpdater(object):
 
         plist = plistlib.readPlistFromString(plistData)
 
-        pluginId = plist.get('CFBundleIdentifier', None)
-        pluginName = plist.get('CFBundleDisplayName', None)
-        pluginVersion = plist.get('PluginVersion', None)
+        return self._buildPluginInfo(plist)
 
-        self._debug('Detected plugin in zipfile: %s' % pluginId)
+    #---------------------------------------------------------------------------
+    # verifies the provided plugin info matches what we expect
+    def _verifyPluginInfo(self, pInfo):
+        self._debug('Verifying plugin info: %s' % pInfo.id)
 
-        if (pluginId == None):
-            raise Exception('Unable to detect pluginId in download')
-        elif (pluginName == None):
-            raise Exception('Unable to detect pluginName in download')
-        elif (pluginVersion == None):
-            raise Exception('Unable to detect pluginVersion in download')
-        elif (self.plugin and (self.plugin.pluginId != pluginId)):
-            raise Exception('ID mismatch in download')
+        if (pInfo.id == None):
+            raise Exception('Unable to detect pluginId')
+        elif (pInfo.name == None):
+            raise Exception('Unable to detect pluginName')
+        elif (pInfo.version == None):
+            raise Exception('Unable to detect pluginVersion')
+        elif (self.plugin and (self.plugin.pluginId != pInfo.id)):
+            raise Exception('ID mismatch: %s' % self.plugin.pluginId)
 
-        self._debug('Found plugin: %s-%s' % (pluginName, pluginVersion))
-
-        return pluginName + '-' + pluginVersion
+        self._debug('Verified plugin: %s' % pInfo.id)
 
     #---------------------------------------------------------------------------
     # install a given release
-    def _installRelease(self, release, dryrun=False):
+    def _installRelease(self, release):
         tmpdir = tempfile.gettempdir()
         self._debug('Workspace: %s' % tmpdir)
 
-        # the zipfile is held in memory until we verify
+        # the zipfile is held in memory until we extract
         zipfile = self._getZipFileFromRelease(release)
-        newPluginName = self._verifyPluginInfo(zipfile)
+        pInfo = self._readPluginInfoFromArchive(zipfile)
+
+        self._verifyPluginInfo(pInfo)
 
         # the top level directory should be the first entry in the zipfile
         # it is typically a combination of the owner, repo & release tag
@@ -252,29 +274,36 @@ class GitHubPluginUpdater(object):
         if (not os.path.exists(repoBaseDir)):
             raise Exception('Failed to extract plugin')
 
+        self._installPlugin(newPluginPath)
+
+        # all clear...  time to clean up
+        if (os.path.exists(repoBaseDir)): shutil.rmtree(repoBaseDir)
+        self._debug('Installation complete')
+
+    #---------------------------------------------------------------------------
+    # install plugin from the existing path
+    def _installPlugin(self, pluginPath):
+        tmpdir = tempfile.gettempdir()
+
+        pInfo = self._readPluginInfoFromPath(pluginPath)
+        self._verifyPluginInfo(pInfo)
+
         # if the new plugin path does not end in .indigoPlugin, we need to do some
         # path shuffling for 'open' to work properly
-        if (not newPluginPath.endswith('.indigoPlugin')):
-            stagedPluginPath = os.path.join(tmpdir, newPluginName + '.indigoPlugin')
+        if (not pluginPath.endswith('.indigoPlugin')):
+            stagedPluginPath = os.path.join(tmpdir, '%s.indigoPlugin' % pInfo.name)
             self._debug('Staging plugin: %s' % stagedPluginPath)
             if (os.path.exists(stagedPluginPath)): shutil.rmtree(stagedPluginPath)
 
-            os.rename(newPluginPath, stagedPluginPath)
-            newPluginPath = stagedPluginPath
+            os.rename(pluginPath, stagedPluginPath)
+            pluginPath = stagedPluginPath
 
-        if (dryrun):
-            self._log('Installation terminated (dryrun)')
-            return
+        self._debug('Installing %s' % pInfo.name)
+        subprocess.call(['open', pluginPath])
 
-        self._debug('Installing %s' % newPluginName)
-        subprocess.call(['open', indigoPlugin])
-
-        if (os.path.exists(newPluginPath)):
+        if (os.path.exists(pluginPath)):
             self._error('Installation canceled')
-            shutil.rmtree(newPluginPath)
-
-        # all clear...  the new plugin has been installed
-        if (os.path.exists(repoBaseDir)): shutil.rmtree(repoBaseDir)
+            shutil.rmtree(pluginPath)
 
     #---------------------------------------------------------------------------
     # return the valid zipfile from the release, or raise an exception
@@ -298,20 +327,34 @@ class GitHubPluginUpdater(object):
     #---------------------------------------------------------------------------
     # convenience method for log messages
     def _log(self, msg):
-        indigo.server.log(msg)
+        if self.plugin:
+            indigo.server.log(msg)
+        else:
+            print msg
 
     #---------------------------------------------------------------------------
     # convenience method for debug messages
     def _debug(self, msg):
         if self.plugin:
             self.plugin.debugLog(msg)
+        else:
+            print '[DEBUG] %s' % msg
 
     #---------------------------------------------------------------------------
     # convenience method for error messages
     def _error(self, msg):
         if self.plugin:
             self.plugin.errorLog(msg)
+        else:
+            print '[ERROR] %s' % msg
 
 ################################################################################
 # maps the standard version string as a tuple for comparrison
 def ver(vstr): return tuple(map(int, (vstr.split('.'))))
+
+################################################################################
+## TEST ENTRY
+if __name__ == "__main__":
+    updater = GitHubPluginUpdater()
+    updater.update('0.0.0')
+
