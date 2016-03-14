@@ -18,6 +18,7 @@ import shutil
 import json
 import httplib
 import plistlib
+import indigo
 
 import ConfigParser
 
@@ -235,7 +236,7 @@ class GitHubPluginUpdater(object):
         elif (self.plugin and (self.plugin.pluginId != pInfo.id)):
             raise Exception('ID mismatch: %s' % self.plugin.pluginId)
 
-        self._debug('Verified plugin: %s' % pInfo.id)
+        self._debug('Verified plugin: %s' % pInfo.name)
 
     #---------------------------------------------------------------------------
     # install a given release
@@ -300,10 +301,6 @@ class GitHubPluginUpdater(object):
 
         self._debug('Installing %s' % pInfo.name)
         subprocess.call(['open', pluginPath])
-
-        if (os.path.exists(pluginPath)):
-            self._error('Installation canceled')
-            shutil.rmtree(pluginPath)
 
     #---------------------------------------------------------------------------
     # return the valid zipfile from the release, or raise an exception
