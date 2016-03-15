@@ -367,6 +367,6 @@ class TestPluginStub(object):
 if __name__ == "__main__":
     plugin = TestPluginStub()
 
-    updater = GitHubPluginUpdater(plugin=plugin, configFile='/Users/jheddings/Projects/indigo/indigo-ghpu/Contents/Server Plugin/ghpu.cfg')
+    updater = GitHubPluginUpdater(plugin=plugin)
     updater.update()
 
