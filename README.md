@@ -1,3 +1,7 @@
+> This plugin is no longer being maintained or updated with the release of the
+> [Indigo Plugin Store][http://www.indigodomo.com/pluginstore/].  Be sure to check
+> it out for the latest release of all your favorite plugins!
+
 # indigo-ghpu
 
 This is an Indigo plugin updater for plugins released on GitHub.  To help illustrate its
